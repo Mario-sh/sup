@@ -149,13 +149,10 @@
         }
 
         .buttons-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
             position: relative;
-            min-height: 200px;
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
         }
 
         #btnYes {
@@ -164,6 +161,11 @@
             box-shadow: 0 10px 30px rgba(255, 107, 157, 0.4);
             animation: glow 1.5s ease-in-out infinite;
             transition: all 0.3s ease;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
         }
 
         @keyframes glow {
@@ -179,7 +181,11 @@
             background: linear-gradient(135deg, #e0e0e0 0%, #b0b0b0 100%);
             color: #666;
             position: absolute;
-            transition: all 0.1s ease;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+            z-index: 50;
         }
 
         #btnNo:hover {
@@ -247,6 +253,10 @@
 
             .container {
                 padding: 30px 20px;
+            }
+
+            .buttons-container {
+                height: 350px;
             }
         }
 
@@ -379,7 +389,8 @@
 
             // Faire grossir le bouton OUI de 20%
             yesButtonScale += 0.2;
-            btnYes.style.transform = `scale(${yesButtonScale})`;
+            const scaledSize = yesButtonScale;
+            btnYes.style.transform = `translateX(-50%) scale(${scaledSize})`;
             
             // Rendre le bouton OUI plus rouge/vibrant
             const hueShift = Math.min(noClickCount * 10, 50);
@@ -387,16 +398,37 @@
 
             // Téléportation aléatoire du bouton NON
             const containerRect = container.getBoundingClientRect();
-            const btnRect = btnNo.getBoundingClientRect();
+            const btnNoRect = btnNo.getBoundingClientRect();
+            const btnYesRect = btnYes.getBoundingClientRect();
             
-            const maxX = containerRect.width - btnRect.width - 20;
-            const maxY = containerRect.height - btnRect.height - 20;
+            // Zone de sécurité autour du bouton OUI (pour éviter les chevauchements)
+            const safetyMargin = 80;
+            const yesButtonZone = {
+                left: btnYesRect.left - containerRect.left - safetyMargin,
+                right: btnYesRect.right - containerRect.left + safetyMargin,
+                top: btnYesRect.top - containerRect.top - safetyMargin,
+                bottom: btnYesRect.bottom - containerRect.top + safetyMargin
+            };
             
-            const randomX = Math.random() * maxX;
-            const randomY = Math.random() * maxY;
+            let randomX, randomY;
+            let attempts = 0;
+            
+            // Trouver une position qui n'est pas trop proche du bouton OUI
+            do {
+                randomX = Math.random() * (containerRect.width - btnNoRect.width - 40) + 20;
+                randomY = Math.random() * (containerRect.height - btnNoRect.height - 40) + 20;
+                attempts++;
+            } while (
+                attempts < 20 &&
+                randomX > yesButtonZone.left && 
+                randomX < yesButtonZone.right &&
+                randomY > yesButtonZone.top && 
+                randomY < yesButtonZone.bottom
+            );
             
             btnNo.style.left = randomX + 'px';
             btnNo.style.top = randomY + 'px';
+            btnNo.style.transform = 'translate(0, 0)';
 
             // Animation de vibration
             btnNo.style.animation = 'none';
